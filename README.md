@@ -6,9 +6,9 @@
 	- Open the Macro KeyBind Mod keyboard screen;
 	- Open one of the gray keys;
 	- Type the following code:
-		 `$$<Mexican_Snake.txt>`
+		 `$$<Radial_Search.txt>`
 	- Click the button `Edit File`;
-	- Type `radial_search` and press `Create`;
+	- Type `Radial_Search` and press `Create`;
 	- Paste the script and Save.
 - **Usage**
 	- The script is easy to custom. You can change the ID of the item you are looking for, the 2d (XZ plane) radius up to which you'd like to search and also the vertical limits (making it a rectangular prism).
