@@ -1,0 +1,46 @@
+&searching_for = "bed";         // The ID you are looking for;
+#min_radius = 0;                // The minimum distance from which it will start looking for;
+#max_radius = 10;               // The maximum distance up to which it will look for;
+#vertical_lower_distance = 0;   // The lower distance in the vertical axis;
+#vertical_upper_distance = 1;   // The upper distance in the vertical axis;
+
+time(&time,"hh:mm:ss:SSS");
+log("&f&l[&2&lMA&f&lC&4&lRO&f&l] &fSearching for a &6%&searching_for% &fnear you... &8(&f%&time%&8)");
+
+unsafe(1000);
+	unset(break);
+    for(#radius,%#min_radius%,%#max_radius%);
+        for(#x,-%#radius%,%#radius%);
+            for(#z,-%#radius%,%#radius%);
+                for(#y,%#vertical_lower_distance%,%#vertical_upper_distance%);
+                    if( (#x == #radius)||(#z == #radius)||(#x == (#radius * -1))||(#z == (#radius * -1)) );
+                        getidrel(%#x%,%#y%,%#z%,&id);
+                        if(&id == &searching_for);
+                            #x_coord = XPOS + #x;
+                            #y_coord = YPOS + #y;
+                            #z_coord = ZPOS + #z;
+                            set(break);
+                            break;
+                        endif;
+                    endif;
+                next;
+                if(break);
+                    break;
+                endif;
+            next;
+            if(break);
+                break;
+            endif;
+        next;
+        if(break);
+            break;
+        endif;
+    next;
+    time(&time,"hh:mm:ss:SSS");
+endunsafe;
+
+if(break);
+    log("&f&l[&2&lMA&f&lC&4&lRO&f&l] &aA &6%&searching_for% &awas found at &6%#x_coord%&7,&6%#y_coord%&7,&6%#z_coord% &8(&f%&time%&8)");
+else;
+    log("&f&l[&2&lMA&f&lC&4&lRO&f&l] &cThe script wasn't able to find any &6%&searching_for% &cnear you!");
+endif;
