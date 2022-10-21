@@ -1,50 +1,94 @@
 $${
 
-&searching_for = "bed";         // The ID you are looking for;
-#min_radius = 0;                // The minimum distance from which it will start looking for;
-#max_radius = 10;               // The maximum distance up to which it will look for;
-#vertical_lower_distance = 0;   // The lower distance in the vertical axis;
-#vertical_upper_distance = 1;   // The upper distance in the vertical axis;
+// RedialSearch v2.0;
+// By lomexicano;
+// Searches for a specified block nearby, in a rectangular prism area around the player.
+// Should only read useful coordinates, respecting the boundaries that can be changed below, and not iterating over coordinates already checked.
+
+&searching_for = "bed";			// The ID you are looking for;
+#min_radius = 0;			// The minimum distance (>=0) from which it will start looking for;
+#max_radius = 12;			// The maximum distance (>= minimum) up to which it will look for;
+#vertical_lower_distance = 0;   	// The lower distance in the vertical axis;
+#vertical_upper_distance = 3;   	// The upper distance in the vertical axis;
+#delay = 0;				// Delay between every loop, in ticks. No need for one, just in case you want to see the process more clearly;
+particles_mode_all = false;		// Whether or not display "barrier" particles on the coordinates being checked. Requires Klacaiba 1.2.0 or higher.
+particles_mode_found = true;		// Whether or not display "heart" particles over and below the found block, in order to make it easier to point to where these coordinates are. Requires Klacaiba 1.2.0 or higher.
+log_mode = false;			// Whether or not display, in the chat, what coordinates are being checked.
 
 time(&time,"hh:mm:ss:SSS");
 log("&f&l[&2&lMA&f&lC&4&lRO&f&l] &fSearching for a &6%&searching_for% &fnear you... &8(&f%&time%&8)");
 
+if((#min_radius < 0)||(#min_radius > #max_radius));
+	log("&f&l[&2&lMA&f&lC&4&lRO&f&l] &fInvalid limits for the radius!");
+	stop;
+endif;
+
+#number_of_blocks_checked = 0;
+
 unsafe(1000);
 	unset(break);
-    for(#radius,%#min_radius%,%#max_radius%);
-        for(#x,-%#radius%,%#radius%);
-            for(#z,-%#radius%,%#radius%);
-                for(#y,%#vertical_lower_distance%,%#vertical_upper_distance%);
-                    if( (#x == #radius)||(#z == #radius)||(#x == (#radius * -1))||(#z == (#radius * -1)) );
-                        getidrel(%#x%,%#y%,%#z%,&id);
-                        if(&id == &searching_for);
-                            #x_coord = XPOS + #x;
-                            #y_coord = YPOS + #y;
-                            #z_coord = ZPOS + #z;
-                            set(break);
-                            break;
-                        endif;
-                    endif;
-                next;
-                if(break);
-                    break;
-                endif;
-            next;
-            if(break);
-                break;
-            endif;
-        next;
-        if(break);
-            break;
-        endif;
-    next;
-    time(&time,"hh:mm:ss:SSS");
+	for(#radius,%#min_radius%,%#max_radius%);
+		#x = #radius * -1;
+		do();
+			#z = #radius * -1;
+			do();
+				for(#y,%#vertical_lower_distance%,%#vertical_upper_distance%);
+					inc(#number_of_blocks_checked,1);
+					if(log_mode);
+						log("&8[&eradius: &f%#radius%&8] &eReading &a%#x%&7,&b%#y%&7,&c%#z%");
+					endif;
+					if((particles_mode_all)&&(KLACAIBAVERSION >= 120000));
+						#realx = XPOS + #x;
+						#realy = YPOS + #y;
+						#realz = ZPOS + #z;
+						particle("barrier","%#realx%","%#realy%","%#realz%",0,0,0);
+					endif;
+					if(#delay > 0);
+						wait("%#delay%t");
+					endif;					
+					if( (#x == #radius)||(#z == #radius)||(#x == (#radius * -1))||(#z == (#radius * -1)) );
+						getidrel(%#x%,%#y%,%#z%,&id);
+						if(&id == &searching_for);
+							#x_coord = XPOS + #x;
+							#y_coord = YPOS + #y;
+							#z_coord = ZPOS + #z;
+							set(break);
+							break;
+						endif;
+						if((#x != #radius)&&(#x != (#radius * -1))&&(#z == (#radius * -1))&&(#y = #vertical_upper_distance));
+							#inc = 2 * #radius;
+							dec(#inc,1);
+							inc(#z,%#inc%);
+							break;
+						endif;
+					else;
+						break;
+					endif;
+				next;
+				inc(#z,1);
+			until((#z > #radius)||(break));
+			inc(#x,1);
+		until((#x > #radius)||(break));
+		if(break);
+			break;
+		endif;
+	next;
+	time(&time,"hh:mm:ss:SSS");
+	if((particles_mode_found)&&(KLACAIBAVERSION >= 120000)&&(break));
+		#particle_y = #y_coord - 10;
+		#particle_y_height = #y_coord + 10;
+		for(#particle_y_display,%#particle_y%,%#particle_y_height%);
+			particle("heart","%#x_coord%","%#particle_y_display%","%#z_coord%",0,0,0);
+		next;
+	endif;
 endunsafe;
 
 if(break);
-    log("&f&l[&2&lMA&f&lC&4&lRO&f&l] &aA &6%&searching_for% &awas found at &6%#x_coord%&7,&6%#y_coord%&7,&6%#z_coord% &8(&f%&time%&8)");
+	log("&f&l[&2&lMA&f&lC&4&lRO&f&l] &aA &6%&searching_for% &awas found at &6%#x_coord%&7,&6%#y_coord%&7,&6%#z_coord% &8(&f%&time%&8)");
 else;
-    log("&f&l[&2&lMA&f&lC&4&lRO&f&l] &cThe script wasn't able to find any &6%&searching_for% &cnear you!");
+	log("&f&l[&2&lMA&f&lC&4&lRO&f&l] &cThe script wasn't able to find any &6%&searching_for% &cnear you!");
 endif;
+
+log("&f&l[&2&lMA&f&lC&4&lRO&f&l] &fThis process read &e%#number_of_blocks_checked% &fblocks.");
 
 }$$
